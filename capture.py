@@ -21,10 +21,11 @@ GPIO.setup(relayPIN, GPIO.OUT)
 cap = VideoStream(src=-1).start()
 
 Servo_Current = 90
-AOE = 15
+AOE = 20
 Max_Step_Size = 10
+Servo_Channel = 2
 Sweep_Step_Size = Max_Step_Size
-kit.servo[1].angle = 90
+kit.servo[Servo_Channel].angle = 90
 
 while(1):
 
@@ -93,14 +94,15 @@ while(1):
             Servo_Current = 180
     else:
         Servo_Current += Sweep_Step_Size
-        if Servo_Current > 164:
+        if Servo_Current > 165:
             Sweep_Step_Size *= (-1)
         elif Servo_Current < 16:
             Sweep_Step_Size *= (-1)
     #current_value = X2
     #output = pid(current_value)
     #Sig = output+90
-    kit.servo[1].angle = Servo_Current
+    kit.servo[3].angle = Servo_Current
+    #kit.servo[8].angle = Servo_Current
     if len(cnts) > 0:
         if Servo_Current <= AOE + 90 and Servo_Current >= 90 - AOE:
             if radius > 100:
@@ -115,7 +117,7 @@ while(1):
     #cv2.imshow('clean fix',closing)
     #cv2.imshow('clean', opening)
     #cv2.imshow('edge',edge)
-    cv2.imshow('frame',frame)
+    #cv2.imshow('frame',frame)
     #print(radius)
     #print(bool)
     #cv2.imshow('mask',mask)
@@ -125,8 +127,9 @@ while(1):
     #print(center)
     #print(Half)
     #print(current_value)
-    print (len(cnts))
-    #print(Servo_Current)
+    #print (len(cnts))
+    print (Servo_Current)
+    #print (Sweep_Step_Size)
     #print(dimensions[1])
     #print(dimensions)
     #print(type(cap))

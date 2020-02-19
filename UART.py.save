@@ -1,0 +1,9 @@
+import serial
+from time import sleep
+
+ser = serial.Serial ("/dev/ttyS0", 250000 )  #Open port with baud rate
+while True:
+	
+	ser.write(data.encode())
+
+
