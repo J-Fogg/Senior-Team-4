@@ -6,7 +6,7 @@ import time
 q = Queue()
 
 def stream_frame():
-    cap = VideoStream(src=0).start()
+    pi
     frame = cap.read()
     q.put(frame)
 
