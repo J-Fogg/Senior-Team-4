@@ -148,8 +148,7 @@ while True:
             if degree < 10:
                 degree = 10
         if (CenterX > 270) & (CenterX < 330):
-            GPIO.output(20
-                        ,GPIO.HIGH)                # is it an issue that this GPIO line is 2 lines?
+            GPIO.output(20,GPIO.HIGH)                # is it an issue that this GPIO line is 2 lines?
             Straight = 0        
         degree = kit.servo[1].angle = degree
         

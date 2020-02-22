@@ -1,16 +1,33 @@
 from queue import Queue
-q = Queue(maxsize=6)
+import cv2
+import imutils
+from imutils.video import VideoStream
+import time
+q = Queue()
 
-def add (x,y):
-    z = x+y
-    return z
+def stream_frame():
+    cap = VideoStream(src=0).start()
+    frame = cap.read()
+    q.put(frame)
 
+def read_frame():
+    frame = q.get()
+    q.task_done()
+    cv2.imshow('frame', frame)
+
+    
 def main():
-    value_x = 5
-    value_y = 6
-    answer = add(value_x,value_y)
-    print(answer)git 
+    while True:
+        cap = VideoStream(src=-1).start()
+        frame = cap.read()
+        cv2.imshow('frame', frame)
+
+
+
+
 
 if __name__=="__main__":
     main()
+
+cv2.destroyAllWindows()
 
