@@ -8,13 +8,13 @@ import threading
 frame_Queue = Queue(120)
 stop = False
 
-cap = VideoStream(-1).start()
+cap = cv2.VideoCapture(-1)
 
 
 def stream_frame():
     global stop
     while not stop:
-        frame = cap.read()
+        ret,frame = cap.read()
         frame_Queue.put(frame)
 
 def read_frame():
@@ -44,5 +44,4 @@ if __name__=="__main__":
     main()
 
 cv2.destroyAllWindows()
-
 
