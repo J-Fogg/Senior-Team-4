@@ -3,29 +3,34 @@ import cv2
 import imutils
 from imutils.video import VideoStream
 import time
-import threading
-frame_Queue = Queue()
+import threading 
 
-cap = VideoStream(-1).start()
+frame_Queue = Queue()
+stop = False
+
+cap = VideoStream(0).start()
 
 
 def stream_frame():
-    frame = cap.read()
-    frame_Queue.put(frame)
+    while not stop:
+        frame = cap.read()
+        frame_Queue.put(frame)
 
 def read_frame():
-    frame = frame_Queue.get()
-    frame_Queue.task_done()
-    cv2.imshow('frame', frame)
+    while not stop:
+        frame = frame_Queue.get()
+        frame_Queue.task_done()
+        cv2.imshow('frame', frame)
 
     
 def main():
-    while True:
-        stream_frame()
-        read_frame()
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
+        thread_stream = threading.Thread(target=stream_frame)
+        thread_read = threading.Thread(target=read_frame)
+        thread_stream.start()
+        time.sleep(0.5)
+        thread_read.start()
+        thread_stream.join()
+        thread_read.join()
 
 
 
