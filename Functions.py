@@ -3,24 +3,27 @@ import cv2
 import imutils
 from imutils.video import VideoStream
 import time
-q = Queue()
+frame_Queue = Queue()
+
+cap = VideoStream(-1).start()
+
 
 def stream_frame():
-    pi
     frame = cap.read()
-    q.put(frame)
+    frame_Queue.put(frame)
 
 def read_frame():
-    frame = q.get()
-    q.task_done()
+    frame = frame_Queue.get()
+    frame_Queue.task_done()
     cv2.imshow('frame', frame)
 
     
 def main():
     while True:
-        cap = VideoStream(src=-1).start()
-        frame = cap.read()
-        cv2.imshow('frame', frame)
+        stream_frame()
+        read_frame()
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 
 
@@ -30,4 +33,6 @@ if __name__=="__main__":
     main()
 
 cv2.destroyAllWindows()
+cap.release
+
 
