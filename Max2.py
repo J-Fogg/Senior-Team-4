@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import imutils
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(-1)
 
 while(1):
 
@@ -15,19 +15,13 @@ while(1):
 
 
  
-    lower_value1 = np.array([5,121,210])
-    upper_value1 = np.array([25,171,255])
-
-    lower_value3 = np.array([0,164,133])   
-    upper_value3 = np.array([30,255,255])
+    lower_value1 = np.array([110,160,100])
+    upper_value1 = np.array([180,255,200])
 
 
     mask_color1 = cv2.inRange(hsv, lower_value1, upper_value1)
-    mask_color3 = cv2.inRange(hsv, lower_value3, upper_value3)
-    mask = mask_color1 + mask_color3
+    mask = mask_color1
    
-    res = cv2.bitwise_and(frame,frame, mask= mask)
-    edge = cv2.Canny(res,100,200)
     kernel = np.ones((10,10),None)
     kernel2 = np.ones((10,10),None)
     opening = cv2.morphologyEx(mask,cv2.MORPH_OPEN, kernel)
@@ -56,10 +50,9 @@ while(1):
     #cv2.imshow('clean', opening)
    # cv2.imshow('edge',edge)
     cv2.imshow('frame',frame)
-    cv2.imshow('mask',mask)
-    cv2.imshow('res',res)
+    #cv2.imshow('mask',mask)
     #print(center)
-    k = cv2.waitKey(5) & 0xFF
+    k = cv2.waitKey(1) & 0xFF
     if k == 27:
         break
 
