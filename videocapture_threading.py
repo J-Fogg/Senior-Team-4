@@ -5,30 +5,37 @@ from imutils.video import VideoStream
 import time
 import threading 
 
-frame_Queue = Queue()
+frame_Queue = Queue(120)
 stop = False
 
-cap = VideoStream(0).start()
+cap = cv2.VideoCapture(-1)
 
 
 def stream_frame():
-        frame = cap.read()
+    global stop
+    while not stop:
+        ret,frame = cap.read()
         frame_Queue.put(frame)
 
 def read_frame():
+    global stop
+    while not stop:
         frame = frame_Queue.get()
         frame_Queue.task_done()
         cv2.imshow('frame', frame)
-
-    
-def main():
-    global stop
-    while not stop:
-        stream_frame()
-        read_frame()
         if cv2.waitKey(1) & 0xFF == ord('q'):
             stop = True
             break
+
+    
+def main():
+        thread_stream = threading.Thread(target=stream_frame)
+        thread_read = threading.Thread(target=read_frame)
+        thread_stream.start()
+        time.sleep(0.5)
+        thread_read.start()
+        thread_stream.join()
+        thread_read.join()
 
 
 
@@ -37,6 +44,6 @@ if __name__=="__main__":
     main()
 
 cv2.destroyAllWindows()
-cap.release
+
 
 
