@@ -4,10 +4,14 @@ import imutils
 import numpy as np
 import time
 import threading
+import serial
+import json
 from adafruit_servokit import ServoKit
 
 kit = ServoKit(channels=16)
 Servo_Channel = 7
+
+ser = serial.Serial("/dev/ttyS0", 115200 )
 
 lower_value1 = np.array([142,176,119])
 upper_value1 = np.array([180,255,200])
@@ -66,9 +70,9 @@ def read_frame():
             servo_control(center_point[0])
         else:
             sweep_search()
-            print("search")
+           # print("search")
             
-        cv2.imshow('frame',frame)
+       # cv2.imshow('frame',frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             stop = True
             break
@@ -81,15 +85,16 @@ def servo_control(center_of_cones):
     
     normalized_scale = (center_scaled)/320 # scale -1 to 1
     step_p = (normalized_scale* -max_step_size)
-    print(step_p , "step_p")
-    if abs(step_p) > 0.25:
+    #print(step_p , "step_p")
+    if abs(step_p) > 0.5:
         servo += (step_p)
-    if servo < 0:
-        servo = 0
-    elif servo > 180:
-        servo = 180
+    if servo < 10:
+        servo = 10
+    elif servo > 170:
+        servo = 170
+    transmit(servo,center_of_cones)
     kit.servo[servo_channel].angle = servo
-    print(servo)
+    #print(servo)
     
 def sweep_search():
     global servo, sweep_step_size
@@ -99,17 +104,30 @@ def sweep_search():
     elif servo < 16:
         sweep_step_size *= (-1)
     kit.servo[servo_channel].angle = servo
+
+def transmit(servo,center_of_cones):
+    correction = (servo + (-30/320)*(center_of_cones - 320))-90
+   # print(correction)
+    
+    #print(center_of_cones)
+    servo_json = json.dumps(correction)
+    ser.write(servo_json.encode())
+    ser.write('\r\n'.encode())
+        
     
 def main():
     thread_stream = threading.Thread(target=stream_frame)
     thread_read = threading.Thread(target=read_frame)
+    #thread_transmit = threading.Thread(target=transmit)
     #thread_servo = threading.Thread(target=servo_control)
     thread_stream.start()
     time.sleep(0.5)
     thread_read.start()
+    #thread_transmit.start()
     #thread_servo.start()
     thread_stream.join()
     thread_read.join()
+    #thread_transmit.join()
     #thread_servo.join()
     cv2.destroyAllWindows()
 
