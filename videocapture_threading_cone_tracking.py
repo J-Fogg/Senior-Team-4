@@ -2,14 +2,23 @@ from queue import Queue
 import cv2
 import imutils
 import numpy as np
-from imutils.video import VideoStream
 import time
 import threading
+from adafruit_servokit import ServoKit
+
+kit = ServoKit(channels=16)
+Servo_Channel = 7
 
 lower_value1 = np.array([142,176,119])
 upper_value1 = np.array([180,255,200])
 frame_Queue = Queue(120)
 stop = False
+
+max_step_size = 15
+sweep_step_size = 1
+servo = 90
+servo_channel = 7
+kit.servo[servo_channel].angle = 90
 
 cap = cv2.VideoCapture(-1)
 
@@ -29,6 +38,7 @@ def stream_frame():
     global stop
     while not stop:
         ret,frame = cap.read()
+        frame = cv2.flip(frame, -1)
         frame_Queue.put(frame)
 
 
@@ -53,28 +63,56 @@ def read_frame():
             center_point = (int((centers[0][0] + centers[1][0])/2),int((centers[0][1] + centers[1][1])/2))
             cv2.line(frame, (centers[0][0],centers[0][1]), (centers[1][0],centers[1][1]), (255, 0, 0), (3))
             cv2.line(frame, (center_point[0],center_point[1]), (center_point[0],center_point[1]), (0, 255, 0), (10))
+            servo_control(center_point[0])
+        else:
+            sweep_search()
+            print("search")
+            
         cv2.imshow('frame',frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             stop = True
             break
+        
+
+def servo_control(center_of_cones):
+    global servo
+    max_step_size = 5
+    center_scaled = (center_of_cones-320) # -320 to 320
     
+    normalized_scale = (center_scaled)/320 # scale -1 to 1
+    step_p = (normalized_scale* -max_step_size)
+    print(step_p , "step_p")
+    if abs(step_p) > 0.25:
+        servo += (step_p)
+    if servo < 0:
+        servo = 0
+    elif servo > 180:
+        servo = 180
+    kit.servo[servo_channel].angle = servo
+    print(servo)
+    
+def sweep_search():
+    global servo, sweep_step_size
+    servo += sweep_step_size
+    if servo > 165:
+        sweep_step_size *= (-1)
+    elif servo < 16:
+        sweep_step_size *= (-1)
+    kit.servo[servo_channel].angle = servo
     
 def main():
     thread_stream = threading.Thread(target=stream_frame)
     thread_read = threading.Thread(target=read_frame)
+    #thread_servo = threading.Thread(target=servo_control)
     thread_stream.start()
     time.sleep(0.5)
     thread_read.start()
+    #thread_servo.start()
     thread_stream.join()
     thread_read.join()
+    #thread_servo.join()
     cv2.destroyAllWindows()
 
 
 if __name__=="__main__":
     main()
-
-cv2.destroyAllWindows()
-
-
-
-

@@ -1,18 +1,13 @@
 import cv2
 import numpy as np
 import imutils
-from simple_pid import PID
 import time
-import adafruit_pca9685
 import board
 import busio
 import RPi.GPIO as GPIO
 from imutils.video import VideoStream
-i2c = busio.I2C(board.SCL, board.SDA)
 from adafruit_servokit import ServoKit
 kit = ServoKit(channels=16)
-hat = adafruit_pca9685.PCA9685(i2c)
-hat.frequency = 60
 relayPIN = 23
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(relayPIN, GPIO.OUT)
@@ -22,8 +17,8 @@ cap = VideoStream(src=-1).start()
 
 Servo_Current = 90
 AOE = 20
-Max_Step_Size = 10
-Servo_Channel = 2
+Max_Step_Size = 6
+Servo_Channel = 7
 Sweep_Step_Size = Max_Step_Size
 kit.servo[Servo_Channel].angle = 90
 
@@ -101,7 +96,7 @@ while(1):
     #current_value = X2
     #output = pid(current_value)
     #Sig = output+90
-    kit.servo[3].angle = Servo_Current
+    kit.servo[7].angle = Servo_Current
     #kit.servo[8].angle = Servo_Current
     if len(cnts) > 0:
         if Servo_Current <= AOE + 90 and Servo_Current >= 90 - AOE:
@@ -117,7 +112,7 @@ while(1):
     #cv2.imshow('clean fix',closing)
     #cv2.imshow('clean', opening)
     #cv2.imshow('edge',edge)
-    #cv2.imshow('frame',frame)
+    cv2.imshow('frame',frame)
     #print(radius)
     #print(bool)
     #cv2.imshow('mask',mask)
