@@ -19,7 +19,7 @@ frame_Queue = Queue(120)
 stop = False
 
 max_step_size = 15
-sweep_step_size = 1
+sweep_step_size = 5
 servo = 90
 servo_channel = 7
 kit.servo[servo_channel].angle = 90
@@ -72,7 +72,7 @@ def read_frame():
             sweep_search()
            # print("search")
             
-       # cv2.imshow('frame',frame)
+        cv2.imshow('frame',frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             stop = True
             break
