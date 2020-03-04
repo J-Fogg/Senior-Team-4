@@ -8,7 +8,7 @@ import threading
 frame_Queue = Queue()
 stop = False
 
-cap = VideoStream(0).start()
+cap = VideoStream(-1).start()
 
 
 def stream_frame():
