@@ -18,8 +18,6 @@ upper_value1 = np.array([180,255,200])
 frame_Queue = Queue(120)
 stop = False
 
-
-Point = 1
 radius = 1
 max_step_size = 15
 sweep_step_size = 5
@@ -50,7 +48,7 @@ def stream_frame():
 
 
 def read_frame():
-    global stop, lower_value1, upper_value1,radius,dist
+    global stop, lower_value1, upper_value1,radius
     while not stop:
         frame = frame_Queue.get()
         frame_Queue.task_done()
@@ -64,36 +62,31 @@ def read_frame():
         closing = cv2.morphologyEx(opening,cv2.MORPH_CLOSE, kernel2)
         cnt = cv2.findContours(closing,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
         sorted_cnts = sorted(cnt[0], key=cv2.contourArea, reverse=True)
-        cnts = enumerate(sorted_cnts)
-        print (list(cnts))
-        #sorted_cntss = sorted(cnt, key=cv2.contourArea, reverse=True)
+        #cnts = cnt[0][0]
+        #(x,y),radius = cv2.minEnclosingCircle(cnt)
+        
         centers = find_centers(frame, sorted_cnts)
-        #(x,y),radius = cv2.minEnclosingCircle(cnts)
-
-        if len(centers) > 1:
-            #print (cnt[0][0])
+        if len(centers) > 1: 
             center_point = (int((centers[0][0] + centers[1][0])/2),int((centers[0][1] + centers[1][1])/2))
             cv2.line(frame, (centers[0][0],centers[0][1]), (centers[1][0],centers[1][1]), (255, 0, 0), (3))
             cv2.line(frame, (center_point[0],center_point[1]), (center_point[0],center_point[1]), (0, 255, 0), (10))
-            dist = distance(radius)
-            servo_control(center_point[0], dist)
-            dist = distance(radius)
+            servo_control(center_point[0])
+            #distance(radius)
         else:
             sweep_search()
            # print("search")
             
-        cv2.imshow('frame',frame)
+       # cv2.imshow('frame',frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             stop = True
             break
         
-def distance(radius):
-    distance = (radius * 1.35)/2.54
-    return (distance)
+#def distance(radius):
+    #print (radius)
 
 
 
-def servo_control(center_of_cones,dist):
+def servo_control(center_of_cones):
     global servo
     max_step_size = 5
     center_scaled = (center_of_cones-320) # -320 to 320
@@ -107,7 +100,7 @@ def servo_control(center_of_cones,dist):
         servo = 10
     elif servo > 170:
         servo = 170
-    transmit(servo,center_of_cones, dist)
+    transmit(servo,center_of_cones)
     kit.servo[servo_channel].angle = servo
     #print(servo)
     
@@ -120,20 +113,14 @@ def sweep_search():
         sweep_step_size *= (-1)
     kit.servo[servo_channel].angle = servo
 
-def transmit(servo,center_of_cones,dist ):
+def transmit(servo,center_of_cones):
     correction = (servo + (-30/320)*(center_of_cones - 320))-90
-    #tup1 = (correction, dist)
    # print(correction)
-    #print(tup1)
+    
     #print(center_of_cones)
     servo_json = json.dumps(correction)
     ser.write(servo_json.encode())
     ser.write('\r\n'.encode())
-    print(servo_json)
-    '''ser.write(','.encode())
-    dist_json = json.dumps(dist)
-    ser.write(dist_json.encode())
-    print(dist_json)'''
         
     
 def main():
