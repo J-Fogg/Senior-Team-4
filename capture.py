@@ -7,15 +7,16 @@ import busio
 import RPi.GPIO as GPIO
 from imutils.video import VideoStream
 from adafruit_servokit import ServoKit
-kit = ServoKit(channels=16)
-relayPIN = 23
+
+kit = ServoKit(channels=16)     
+relayPIN = 23                   # selects the gpio pin for the relay
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(relayPIN, GPIO.OUT)
 
 
-cap = VideoStream(src=-1).start()
+cap = VideoStream(src=-1).start()    # starts the video stream
 
-Servo_Current = 90
+Servo_Current = 90                   # constants for the program
 AOE = 20
 Max_Step_Size = 6
 Servo_Channel = 7
@@ -23,84 +24,69 @@ Sweep_Step_Size = Max_Step_Size
 kit.servo[Servo_Channel].angle = 90
 
 while(1):
-
-    # Take each frame
-    frame = cap.read()
-    dimensions = frame.shape    
-    #Half = (dimensions[1]/2)
-    #Deg = (90/Half)
-    #Fin = Half * Deg
-    #pid = PID(.2, 0.6, 4, setpoint=0)
-    #pid.output_limits = (-90,90)
-    
+    frame = cap.read()              # reads the frames
+    dimensions = frame.shape        # gets the size of the frame
 
     # Convert BGR to HSV
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)    
  
-    lower_value1 = np.array([157,184,180])
+    lower_value1 = np.array([157,184,180])         #sets the ranges for the color of the fire 
     upper_value1 = np.array([192,225,218])
 
     lower_value3 = np.array([157,184,180])
     upper_value3 = np.array([192,225,218])
 
 
-    mask_color1 = cv2.inRange(hsv, lower_value1, upper_value1)
+    mask_color1 = cv2.inRange(hsv, lower_value1, upper_value1) # creates a binary image showing only the colors in range
     mask_color3 = cv2.inRange(hsv, lower_value3, upper_value3)
-    mask = mask_color1 + mask_color3
+    mask = mask_color1 + mask_color3                            # combines the 2 binary images to one
    
-    #res = cv2.bitwise_and(frame,frame, mask= mask)
-    #edge = cv2.Canny(res,100,200)
-    kernel = np.ones((1,1),None)
+    kernel = np.ones((1,1),None)                                # refines the image
     kernel2 = np.ones((25,25),None)
     opening = cv2.morphologyEx(mask,cv2.MORPH_OPEN, kernel)
     closing = cv2.morphologyEx(opening,cv2.MORPH_CLOSE, kernel2)
 
-    cnt = cv2.findContours(closing,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+    cnt = cv2.findContours(closing,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)   # gets the contours 
     cnts = imutils.grab_contours(cnt)
     center = None
     X1 = 320
     radius = 1
-    cnt
-    if len(cnts)>0:
 
-        c = max(cnts, key=cv2.contourArea)
-        ((x,y), radius) = cv2.minEnclosingCircle(c)
+    if len(cnts)>0:         #  checks to see if there are contours 
+
+        c = max(cnts, key=cv2.contourArea)              # gets the largest contour
+        ((x,y), radius) = cv2.minEnclosingCircle(c)     # draws a circle around it 
         M = cv2.moments(c)
         try:
             
-            X1 = int(M["m10"] / M["m00"])
+            X1 = int(M["m10"] / M["m00"])               # gets the center 
             Y1 = int(M["m01"] / M["m00"])
             center = (X1, Y1)
         except Exception:
             print("divide by zero")
-        if radius > 2:
-            cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+        if radius > 2:                                  # if the radius is greater then 2 put a dot on the center 
+            cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)  
             cv2.circle(frame, center, 5, (0,0,255), -1)
-    if len(cnts) > 0:
+    if len(cnts) > 0:                       # checks if there is any contours
         Cone_Center = (X1)-320
         Cone_Center_2 = Cone_Center/320
-        Step_Size = (Cone_Center_2*15)
+        Step_Size = (Cone_Center_2*15)      # scales the step size of the servo
         Servo_Current = (Servo_Current - Step_Size)
-        if Servo_Current < 0:
+        if Servo_Current < 0:               # makes sure servo stays in range 
             Servo_Current = 0
         elif Servo_Current > 180:
             Servo_Current = 180
     else:
-        Servo_Current += Sweep_Step_Size
+        Servo_Current += Sweep_Step_Size        #sweeps of there is not contours 
         if Servo_Current > 165:
             Sweep_Step_Size *= (-1)
         elif Servo_Current < 16:
             Sweep_Step_Size *= (-1)
-    #current_value = X2
-    #output = pid(current_value)
-    #Sig = output+90
-    kit.servo[7].angle = Servo_Current
-    #kit.servo[8].angle = Servo_Current
+
+    kit.servo[7].angle = Servo_Current          # checks if the fire is on the correct side of the car
     if len(cnts) > 0:
         if Servo_Current <= AOE + 90 and Servo_Current >= 90 - AOE:
-            if radius > 100:
+            if radius > 100:                    # checks to see of the fire is in range 
                 bool = True
                 GPIO.output(relayPIN, 1)
             else:
@@ -108,26 +94,10 @@ while(1):
                 GPIO.output(relayPIN, 0)
         else:
             GPIO.output(relayPIN, 0)
-        
-    #cv2.imshow('clean fix',closing)
-    #cv2.imshow('clean', opening)
-    #cv2.imshow('edge',edge)
+
     cv2.imshow('frame',frame)
-    #print(radius)
-    #print(bool)
-    #cv2.imshow('mask',mask)
-    #cv2.imshow('res',res)
-    #print(Sig)
-    #print(output)
-    #print(center)
-    #print(Half)
-    #print(current_value)
-    #print (len(cnts))
     print (Servo_Current)
-    #print (Sweep_Step_Size)
-    #print(dimensions[1])
-    #print(dimensions)
-    #print(type(cap))
+
         
     k = cv2.waitKey(5) & 0xFF
     if k == 27:

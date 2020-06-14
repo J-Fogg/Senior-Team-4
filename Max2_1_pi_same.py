@@ -1,4 +1,4 @@
-import pyximport; pyximport.install()
+#import pyximport; pyximport.install()
 import cv2
 import numpy as np
 import imutils
@@ -59,7 +59,7 @@ while(1):
    # cv2.imshow('edge',edge)
     cv2.imshow('frame',frame)
     cv2.imshow('mask',mask)
-    #cv2.imshow('res',res)
+    cv2.imshow('res',res)
     #print(center)
     k = cv2.waitKey(5) & 0xFF
     if k == 27:

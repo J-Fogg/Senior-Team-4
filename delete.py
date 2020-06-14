@@ -58,7 +58,7 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     #cv2.imshow('clean', opening)
     #cv2.imshow('edge',edge)
     #cv2.imshow('mask',mask)
-    #cv2.imshow('res',res)
+    cv2.imshow('res',res)
     print(center)
     # show the frame
     cv2.imshow("Frame", image)
